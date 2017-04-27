@@ -1,6 +1,6 @@
 #include<asm.h>
 
-.set PROT_MODE
+
 
 
 #目的转换到32位保护模式，进入C
@@ -8,11 +8,12 @@
 
 
 .set PROT_MODE_CSEG, 0x8  # kernel code segment selector
-.set PROT_MODE_DSEG, 0x10 # kernel data segment selector,转换成10进制为16字节，对应第三个段描述符
+.set PROT_MODE_DSEG, 0x10 # kernel data segment selector,段选择子，index部分是描述第几个描述符，不是字节偏移
 .set CR0_PE_ON,0x1 # protected mode enable flag
 
 #连接程序(ld)能够看到start
 .globl start
+start:
 .code16 #实模式16位
 	cli #BIOS 作为一个小型操作系统，为了初始化硬件设备，可能设置了自己的中断处理程序。但是现在 BIOS 已经没有了控制权，而是引导加载器正在运行，所以现在还允许中断不合理也不安全
 	cld
@@ -39,7 +40,7 @@ seta20.2:
 	movb $0xdf,%al
 	outb %al,$0x60
 
-	ldgt gdtdesc
+	lgdt gdtdesc
 	movl %cr0, %eax
 	orl $CR0_PE_ON, %eax
 	movl %eax, %cr0
@@ -59,7 +60,7 @@ protcseg:
 
 
 	movl $0x0,%ebp
-	movl $start,%esp
+	movl $start, %esp
 	call bootmain
 
 spin:
